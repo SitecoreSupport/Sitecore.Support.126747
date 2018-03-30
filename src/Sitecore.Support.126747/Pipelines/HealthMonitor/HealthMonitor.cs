@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using Sitecore.Pipelines;
 using Sitecore.Web;
+using static Sitecore.Diagnostics.Statistics;
 
 namespace Sitecore.Support.Pipelines.HealthMonitor
 {
@@ -14,7 +16,6 @@ namespace Sitecore.Support.Pipelines.HealthMonitor
   {
     public override void DumpRenderingsStatistics(PipelineArgs args)
     {
-
       HtmlTable htmlTable = new HtmlTable
       {
         Border = 1,
@@ -35,9 +36,19 @@ namespace Sitecore.Support.Pipelines.HealthMonitor
         "Last run"
       });
       SortedList<string, Diagnostics.Statistics.RenderingData> sortedList = new SortedList<string, Diagnostics.Statistics.RenderingData>();
-      foreach (Diagnostics.Statistics.RenderingData current in Diagnostics.Statistics.RenderingStatistics)
+
+      var renderingData = typeof(Diagnostics.Statistics)
+        .GetField("_renderingData", BindingFlags.Static | BindingFlags.NonPublic)
+        .GetValue(null) as Sitecore.Collections.SafeDictionary<string, RenderingData>;
+
+      // Set lock on _renderingData collection before looping through it
+      // because other thread may be adding values in other Sitecore.Diagnostics.Statistics.GetRenderingData() 
+      lock (renderingData.SyncRoot)
       {
-        sortedList.Add(current.SiteName + 255 + current.TraceName, current);
+        foreach (Diagnostics.Statistics.RenderingData current in Diagnostics.Statistics.RenderingStatistics)
+        {
+          sortedList.Add(current.SiteName + 255 + current.TraceName, current);
+        }
       }
       foreach (Diagnostics.Statistics.RenderingData current2 in sortedList.Values)
       {

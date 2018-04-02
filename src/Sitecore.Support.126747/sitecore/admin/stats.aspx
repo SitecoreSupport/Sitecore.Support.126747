@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="stats.aspx.cs" Inherits="Sitecore.sitecore.admin.stats" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="stats.aspx.cs" Inherits="Sitecore.Support.sitecore.admin.stats" %>
 
 <!DOCTYPE html>
 

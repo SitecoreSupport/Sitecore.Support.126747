@@ -66,6 +66,11 @@
       HtmlTable htmlTable2 = htmlTable;
       HtmlUtil.AddRow(htmlTable2, "Rendering", "Site", "Count", "From cache", "Avg. time (ms)", "Avg. items", "Max. time", "Max. items", "Total time", "Total items", "Last run");
       SortedList<string, Statistics.RenderingData> sortedList = new SortedList<string, Statistics.RenderingData>();
+      #region Modified code
+      SafeDictionary<string, Statistics.RenderingData> renderingData = typeof(Diagnostics.Statistics).GetField("_renderingData", BindingFlags.Static | BindingFlags.NonPublic)
+        .GetValue(null) as Sitecore.Collections.SafeDictionary<string, Statistics.RenderingData>;
+      lock (renderingData.SyncRoot)
+      {
         foreach (Statistics.RenderingData renderingStatistic in Statistics.RenderingStatistics)
         {
           if (siteName == null || renderingStatistic.SiteName.Equals(siteName, StringComparison.OrdinalIgnoreCase))
@@ -73,6 +78,8 @@
             sortedList.Add(renderingStatistic.SiteName + 255 + renderingStatistic.TraceName, renderingStatistic);
           }
         }
+      }
+      #endregion
       foreach (Statistics.RenderingData value in sortedList.Values)
       {
         HtmlTableRow htmlTableRow = HtmlUtil.AddRow(htmlTable2, value.TraceName, value.SiteName, value.RenderCount, value.UsedCache, value.AverageTime.TotalMilliseconds, value.AverageItemsAccessed, value.MaxTime.TotalMilliseconds, value.MaxItemsAccessed, value.TotalTime, value.TotalItemsAccessed, DateUtil.ToServerTime(value.LastRendered));
